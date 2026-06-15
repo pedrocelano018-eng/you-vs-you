@@ -11,7 +11,7 @@ function render(size, file) {
   const resvg = new Resvg(svg, {
     fitTo: { mode: 'width', value: size },
     font: { loadSystemFonts: true },
-    background: '#000000',
+    background: '#ffffff',
   })
   const png = resvg.render().asPng()
   writeFileSync(join(out, file), png)
