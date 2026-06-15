@@ -57,7 +57,7 @@ export function Calendar({ history, onClose }: Props) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 30 }}
       transition={{ type: 'spring', stiffness: 200, damping: 26 }}
-      className="flex min-h-full flex-col bg-white px-6 safe-top safe-bottom"
+      className="flex min-h-full flex-col bg-white px-6 transition-colors dark:bg-black safe-top safe-bottom"
     >
       <div className="flex items-center justify-between pt-2">
         <span className="text-[13px] font-medium uppercase tracking-widest text-violet">
@@ -73,10 +73,10 @@ export function Calendar({ history, onClose }: Props) {
         </button>
       </div>
 
-      <h1 className="mt-6 text-[26px] font-semibold text-black">
+      <h1 className="mt-6 text-[26px] font-semibold text-black dark:text-white">
         <span className="text-violet">{pct}%</span> Mi mejor versión
       </h1>
-      <p className="mt-1 text-[14px] text-black/45">
+      <p className="mt-1 text-[14px] text-black/45 dark:text-white/45">
         {completed} de {counted.length} días cumplidos este mes
       </p>
 
@@ -89,7 +89,7 @@ export function Calendar({ history, onClose }: Props) {
         >
           <ArrowRight size={22} />
         </button>
-        <span className="text-[17px] font-semibold capitalize text-black">
+        <span className="text-[17px] font-semibold capitalize text-black dark:text-white">
           {monthName(monthKeyStr)} {year}
         </span>
         <button
@@ -104,7 +104,7 @@ export function Calendar({ history, onClose }: Props) {
 
       <div className="mt-5 grid grid-cols-7 gap-1.5 text-center">
         {WEEKDAYS.map((w, i) => (
-          <span key={i} className="text-[11px] font-medium text-black/30">
+          <span key={i} className="text-[11px] font-medium text-black/30 dark:text-white/30">
             {w}
           </span>
         ))}
@@ -125,10 +125,10 @@ export function Calendar({ history, onClose }: Props) {
                 (vacation
                   ? 'border-violet/40 text-violet'
                   : complete
-                    ? 'border-violet bg-violet/30 font-semibold text-black'
+                    ? 'border-violet bg-violet/30 font-semibold text-black dark:text-white'
                     : incomplete
-                      ? 'border-violet/60 text-black/70'
-                      : 'border-black/[0.06] text-black/35') +
+                      ? 'border-violet/60 text-black/70 dark:text-white/70'
+                      : 'border-black/[0.06] text-black/35 dark:border-white/10 dark:text-white/30') +
                 (isToday ? ' ring-2 ring-violet ring-offset-1' : '')
               }
             >

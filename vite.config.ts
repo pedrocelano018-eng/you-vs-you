@@ -10,8 +10,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icon.svg', 'apple-touch-icon.png'],
       manifest: {
-        name: 'You vs You',
-        short_name: 'You vs You',
+        name: 'Prime',
+        short_name: 'Prime',
         description: 'Tu rutina diaria, minimalista y offline.',
         theme_color: '#7C3AED',
         background_color: '#000000',

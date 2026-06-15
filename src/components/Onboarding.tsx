@@ -27,17 +27,19 @@ function RoutineStep({
   return (
     <div className="flex min-h-full flex-col px-6 safe-top safe-bottom">
       <div className="pt-6">
-        <h1 className="text-[28px] font-semibold leading-tight text-black">
+        <h1 className="text-[28px] font-semibold leading-tight text-black dark:text-white">
           {title}
         </h1>
-        <p className="mt-2 text-[15px] text-black/50">{subtitle}</p>
+        <p className="mt-2 text-[15px] text-black/50 dark:text-white/45">
+          {subtitle}
+        </p>
       </div>
 
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder={placeholder}
-        className="mt-6 min-h-[260px] flex-1 resize-none rounded-4xl border-2 border-violet/20 bg-white p-5 text-[15px] leading-relaxed text-black outline-none transition-colors placeholder:text-black/30 focus:border-violet"
+        className="mt-6 min-h-[260px] flex-1 resize-none rounded-4xl border-2 border-violet/20 bg-white p-5 text-[15px] leading-relaxed text-black outline-none transition-colors placeholder:text-black/30 focus:border-violet dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/25"
       />
 
       <div className="mt-3 flex items-center justify-between px-1">
@@ -48,7 +50,7 @@ function RoutineStep({
         >
           Usar rutina de ejemplo
         </button>
-        <span className="text-[13px] text-black/40">
+        <span className="text-[13px] text-black/40 dark:text-white/40">
           {tasks.length} {tasks.length === 1 ? 'tarea' : 'tareas'}
         </span>
       </div>
@@ -70,7 +72,7 @@ export function Onboarding({ onDone }: Props) {
   const [week, setWeek] = useState<string[]>([])
 
   return (
-    <div className="min-h-full bg-white">
+    <div className="min-h-full bg-white transition-colors dark:bg-black">
       <AnimatePresence mode="wait">
         {step === 0 ? (
           <motion.div

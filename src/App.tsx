@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useStore } from './lib/useStore'
+import { useTheme } from './lib/theme'
 import { todayStr } from './lib/date'
 import { Onboarding } from './components/Onboarding'
 import { WelcomeExcuses } from './components/WelcomeExcuses'
 import { Home } from './components/Home'
-import { GoalAchieved } from './components/GoalAchieved'
+import { DayClosed } from './components/DayClosed'
 import { YouVsYou } from './components/YouVsYou'
 import { Calendar } from './components/Calendar'
 import { EditRoutines } from './components/EditRoutines'
@@ -13,7 +14,7 @@ import { Vacation } from './components/Vacation'
 import { ConfirmModal } from './components/ConfirmModal'
 
 type Overlay = 'none' | 'calendar' | 'settings'
-type Flow = 'welcome' | 'home' | 'goal' | 'youvsyou'
+type Flow = 'welcome' | 'home' | 'youvsyou'
 
 function Screen({ children, k }: { children: React.ReactNode; k: string }) {
   return (
@@ -33,22 +34,27 @@ function Screen({ children, k }: { children: React.ReactNode; k: string }) {
 export default function App() {
   const store = useStore()
   const { state } = store
+  const [theme, toggleTheme] = useTheme()
 
   const [flow, setFlow] = useState<Flow>('home')
   const [overlay, setOverlay] = useState<Overlay>('none')
   const [confirmVacation, setConfirmVacation] = useState(false)
 
+  // The record for today, if the day has already been closed.
+  const todayRecord = state.history[state.currentDay]
+  const dayClosed = !!todayRecord && !todayRecord.vacation
+
   // Decide the entry flow for the day: show the welcome (excuses) screen the
   // first time the app is opened on a new day, if there are excuses this month.
   useEffect(() => {
-    if (!state.onboarded || state.vacationMode) return
+    if (!state.onboarded || state.vacationMode || dayClosed) return
     const needsWelcome = state.welcomeSeen !== todayStr()
     if (needsWelcome) {
       setFlow(store.monthExcuses.length > 0 ? 'welcome' : 'home')
       if (store.monthExcuses.length === 0) store.dismissWelcome()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.onboarded, state.currentDay, state.vacationMode])
+  }, [state.onboarded, state.currentDay, state.vacationMode, dayClosed])
 
   // --- Onboarding ---
   if (!state.onboarded) {
@@ -68,13 +74,22 @@ export default function App() {
     )
   }
 
+  // --- Day already closed: show ONLY the result until a new day begins ---
+  if (dayClosed && flow !== 'youvsyou') {
+    return (
+      <Shell>
+        <DayClosed completed={todayRecord.completed} streak={state.streak} />
+      </Shell>
+    )
+  }
+
   function handleFinish() {
     const total = store.total
     const done = store.doneCount
     const complete = total > 0 && done === total
     if (complete) {
+      // Recording closes the day -> the locked DayClosed screen takes over.
       store.recordDay(true, done, total)
-      setFlow('goal')
     } else {
       setFlow('youvsyou')
     }
@@ -93,6 +108,8 @@ export default function App() {
             <EditRoutines
               week={state.weekRoutine}
               weekend={state.weekendRoutine}
+              theme={theme}
+              onToggleTheme={toggleTheme}
               onSave={store.updateRoutine}
               onClose={() => setOverlay('none')}
             />
@@ -126,18 +143,13 @@ export default function App() {
             </Screen>
           )}
 
-          {flow === 'goal' && (
-            <Screen k="goal">
-              <GoalAchieved streak={state.streak} onClose={() => setFlow('home')} />
-            </Screen>
-          )}
-
           {flow === 'youvsyou' && (
             <Screen k="youvsyou">
               <YouVsYou
                 onSave={(excuse) => {
                   store.saveExcuse(excuse)
                   store.recordDay(false, store.doneCount, store.total)
+                  // Day is now closed -> locked DayClosed screen takes over.
                   setFlow('home')
                 }}
               />
@@ -166,7 +178,7 @@ export default function App() {
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative mx-auto h-[100dvh] w-full max-w-md overflow-hidden bg-white">
+    <div className="relative mx-auto h-[100dvh] w-full max-w-md overflow-hidden bg-white transition-colors dark:bg-black">
       {children}
     </div>
   )

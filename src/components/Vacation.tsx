@@ -7,7 +7,7 @@ interface Props {
 
 export function Vacation({ onEnd }: Props) {
   return (
-    <div className="flex min-h-full flex-col items-center justify-center bg-white px-8 text-center safe-top safe-bottom">
+    <div className="flex min-h-full flex-col items-center justify-center bg-white px-8 text-center text-black transition-colors dark:bg-black dark:text-white safe-top safe-bottom">
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
@@ -20,7 +20,7 @@ export function Vacation({ onEnd }: Props) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}
-        className="mt-10 text-[34px] font-semibold tracking-tight text-black"
+        className="mt-10 text-[34px] font-semibold tracking-tight text-black dark:text-white"
       >
         Vacaciones
       </motion.h1>
@@ -28,7 +28,7 @@ export function Vacation({ onEnd }: Props) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.3 }}
-        className="mt-3 max-w-xs text-[15px] leading-relaxed text-black/45"
+        className="mt-3 max-w-xs text-[15px] leading-relaxed text-black/45 dark:text-white/45"
       >
         Tu racha está congelada. Estos días no cuentan. Volvé cuando quieras.
       </motion.p>
@@ -39,7 +39,7 @@ export function Vacation({ onEnd }: Props) {
         transition={{ delay: 0.45 }}
         className="mt-12 flex items-center gap-4"
       >
-        <span className="text-[15px] font-medium text-black">
+        <span className="text-[15px] font-medium text-black dark:text-white">
           Finalizar vacaciones
         </span>
         <Toggle on={true} onChange={() => onEnd()} />
@@ -59,7 +59,7 @@ function UmbrellaScene() {
       />
       <path d="M0 168c34-14 62-14 100-14s66 0 100 14" stroke="#7C3AED" strokeWidth={2.5} />
       {/* pole */}
-      <path d="M118 56l-28 100" stroke="#000" strokeWidth={3} strokeLinecap="round" />
+      <path d="M118 56l-28 100" stroke="currentColor" strokeWidth={3} strokeLinecap="round" />
       {/* canopy */}
       <path
         d="M118 56C150 44 178 56 186 80c-22-8-30 2-44 6 8-22 0-36-24-30z"
@@ -67,11 +67,11 @@ function UmbrellaScene() {
       />
       <path
         d="M118 56C92 50 70 64 64 88c18-12 28-6 44-2-2-18 2-28 10-30z"
-        fill="#000"
+        fill="currentColor"
       />
       <path
         d="M118 56C150 44 178 56 186 80M118 56C92 50 70 64 64 88"
-        stroke="#000"
+        stroke="currentColor"
         strokeWidth={2}
         strokeLinecap="round"
       />

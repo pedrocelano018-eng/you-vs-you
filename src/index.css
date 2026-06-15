@@ -24,6 +24,11 @@
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     overscroll-behavior-y: none;
+    background: #ffffff;
+  }
+
+  html.dark body {
+    background: #000000;
   }
 
   button {

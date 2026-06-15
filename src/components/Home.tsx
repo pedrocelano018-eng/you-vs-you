@@ -1,7 +1,6 @@
 import { motion } from 'framer-motion'
 import type { Store } from '../lib/useStore'
 import { greeting, prettyDate } from '../lib/date'
-import { groupTasks } from '../lib/categories'
 import { ProgressBar } from './ProgressBar'
 import { TaskCircle } from './TaskCircle'
 import { Toggle } from './Toggle'
@@ -23,10 +22,9 @@ export function Home({
   onVacationRequest,
 }: Props) {
   const { state, todayRoutine, doneCount, total, progress } = store
-  const groups = groupTasks(todayRoutine)
 
   return (
-    <div className="flex min-h-full flex-col bg-white px-6 safe-top safe-bottom">
+    <div className="flex min-h-full flex-col bg-white px-6 transition-colors dark:bg-black safe-top safe-bottom">
       {/* Header */}
       <div className="flex items-center justify-between pt-2">
         <button
@@ -49,10 +47,10 @@ export function Home({
 
       {/* Greeting */}
       <div className="mt-6">
-        <h1 className="text-[30px] font-semibold leading-tight text-black">
+        <h1 className="text-[30px] font-semibold leading-tight text-black dark:text-white">
           {greeting()}
         </h1>
-        <p className="mt-1 text-[15px] capitalize text-black/45">
+        <p className="mt-1 text-[15px] capitalize text-black/45 dark:text-white/40">
           {prettyDate(state.currentDay)}
         </p>
       </div>
@@ -68,41 +66,35 @@ export function Home({
           >
             {progress}%
           </motion.span>
-          <span className="text-[14px] font-medium text-black/45">
+          <span className="text-[14px] font-medium text-black/45 dark:text-white/40">
             {doneCount}/{total} tareas completadas
           </span>
         </div>
         <ProgressBar progress={progress} />
       </div>
 
-      {/* Tasks grouped by category */}
-      <div className="mt-8 flex-1">
-        {groups.map((group) => (
-          <div key={group.category.key} className="mb-6">
-            <div className="mb-1 flex items-center gap-1.5">
-              <span className="text-[13px]">{group.category.icon}</span>
-              <h2 className="text-[12px] font-semibold uppercase tracking-wider text-violet">
-                {group.category.label}
-              </h2>
-            </div>
-            <div className="divide-y divide-black/[0.04]">
-              {group.items.map((item) => (
-                <TaskCircle
-                  key={item.index}
-                  text={item.text}
-                  checked={!!state.checks[item.index]}
-                  onToggle={() => store.toggleTask(item.index)}
-                />
-              ))}
-            </div>
-          </div>
-        ))}
+      {/* Tasks in the exact order they were entered */}
+      <div className="mt-7 flex-1">
+        <div className="divide-y divide-black/[0.05] dark:divide-white/[0.07]">
+          {todayRoutine.map((text, index) => (
+            <TaskCircle
+              key={index}
+              text={text}
+              checked={!!state.checks[index]}
+              onToggle={() => store.toggleTask(index)}
+            />
+          ))}
+        </div>
 
         {/* Vacation switch — discreet */}
-        <div className="mt-2 flex items-center justify-between rounded-3xl border border-violet/15 px-5 py-3.5">
+        <div className="mt-7 flex items-center justify-between rounded-3xl border border-violet/20 px-5 py-3.5">
           <div>
-            <p className="text-[14px] font-medium text-black">Modo vacaciones</p>
-            <p className="text-[12px] text-black/40">Congela tu racha</p>
+            <p className="text-[14px] font-medium text-black dark:text-white">
+              Modo vacaciones
+            </p>
+            <p className="text-[12px] text-black/40 dark:text-white/40">
+              Congela tu racha
+            </p>
           </div>
           <Toggle on={false} onChange={() => onVacationRequest()} />
         </div>

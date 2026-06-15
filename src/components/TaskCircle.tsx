@@ -45,8 +45,8 @@ export function TaskCircle({ text, checked, onToggle }: Props) {
         className={
           'text-[15px] leading-snug transition-colors duration-300 ' +
           (checked
-            ? 'text-black/35 line-through decoration-violet/40'
-            : 'text-black')
+            ? 'text-black/35 line-through decoration-violet/40 dark:text-white/30'
+            : 'text-black dark:text-white')
         }
       >
         {text}
