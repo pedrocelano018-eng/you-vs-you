@@ -1,20 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useStore } from './lib/useStore'
 import { useTheme } from './lib/theme'
-import { todayStr } from './lib/date'
 import { Onboarding } from './components/Onboarding'
-import { WelcomeExcuses } from './components/WelcomeExcuses'
 import { Home } from './components/Home'
 import { DayClosed } from './components/DayClosed'
-import { YouVsYou } from './components/YouVsYou'
 import { Calendar } from './components/Calendar'
 import { EditRoutines } from './components/EditRoutines'
 import { Vacation } from './components/Vacation'
 import { ConfirmModal } from './components/ConfirmModal'
 
 type Overlay = 'none' | 'calendar' | 'settings'
-type Flow = 'welcome' | 'home' | 'youvsyou'
 
 function Screen({ children, k }: { children: React.ReactNode; k: string }) {
   return (
@@ -36,7 +32,6 @@ export default function App() {
   const { state } = store
   const [theme, toggleTheme] = useTheme()
 
-  const [flow, setFlow] = useState<Flow>('home')
   const [overlay, setOverlay] = useState<Overlay>('none')
   const [confirmVacation, setConfirmVacation] = useState(false)
 
@@ -44,23 +39,11 @@ export default function App() {
   const todayRecord = state.history[state.currentDay]
   const dayClosed = !!todayRecord && !todayRecord.vacation
 
-  // Decide the entry flow for the day: show the welcome (excuses) screen the
-  // first time the app is opened on a new day, if there are excuses this month.
-  useEffect(() => {
-    if (!state.onboarded || state.vacationMode || dayClosed) return
-    const needsWelcome = state.welcomeSeen !== todayStr()
-    if (needsWelcome) {
-      setFlow(store.monthExcuses.length > 0 ? 'welcome' : 'home')
-      if (store.monthExcuses.length === 0) store.dismissWelcome()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.onboarded, state.currentDay, state.vacationMode, dayClosed])
-
   // --- Onboarding ---
   if (!state.onboarded) {
     return (
       <Shell>
-        <Onboarding onDone={(week, weekend) => store.setRoutines(week, weekend)} />
+        <Onboarding onDone={(routines) => store.setRoutines(routines)} />
       </Shell>
     )
   }
@@ -75,7 +58,7 @@ export default function App() {
   }
 
   // --- Day already closed: show ONLY the result until a new day begins ---
-  if (dayClosed && flow !== 'youvsyou') {
+  if (dayClosed) {
     return (
       <Shell>
         <DayClosed completed={todayRecord.completed} streak={state.streak} />
@@ -87,12 +70,9 @@ export default function App() {
     const total = store.total
     const done = store.doneCount
     const complete = total > 0 && done === total
-    if (complete) {
-      // Recording closes the day -> the locked DayClosed screen takes over.
-      store.recordDay(true, done, total)
-    } else {
-      setFlow('youvsyou')
-    }
+    // Recording closes the day either way -> the locked DayClosed screen
+    // takes over (completed = OBJETIVO LOGRADO, else "Día no completado").
+    store.recordDay(complete, done, total)
   }
 
   return (
@@ -106,8 +86,7 @@ export default function App() {
         {overlay === 'settings' && (
           <Screen k="settings">
             <EditRoutines
-              week={state.weekRoutine}
-              weekend={state.weekendRoutine}
+              routines={state.routines}
               theme={theme}
               onToggleTheme={toggleTheme}
               onSave={store.updateRoutine}
@@ -118,44 +97,15 @@ export default function App() {
       </AnimatePresence>
 
       {overlay === 'none' && (
-        <AnimatePresence mode="wait">
-          {flow === 'welcome' && (
-            <Screen k="welcome">
-              <WelcomeExcuses
-                excuses={store.monthExcuses}
-                onStart={() => {
-                  store.dismissWelcome()
-                  setFlow('home')
-                }}
-              />
-            </Screen>
-          )}
-
-          {flow === 'home' && (
-            <Screen k="home">
-              <Home
-                store={store}
-                onFinish={handleFinish}
-                onOpenCalendar={() => setOverlay('calendar')}
-                onOpenSettings={() => setOverlay('settings')}
-                onVacationRequest={() => setConfirmVacation(true)}
-              />
-            </Screen>
-          )}
-
-          {flow === 'youvsyou' && (
-            <Screen k="youvsyou">
-              <YouVsYou
-                onSave={(excuse) => {
-                  store.saveExcuse(excuse)
-                  store.recordDay(false, store.doneCount, store.total)
-                  // Day is now closed -> locked DayClosed screen takes over.
-                  setFlow('home')
-                }}
-              />
-            </Screen>
-          )}
-        </AnimatePresence>
+        <Screen k="home">
+          <Home
+            store={store}
+            onFinish={handleFinish}
+            onOpenCalendar={() => setOverlay('calendar')}
+            onOpenSettings={() => setOverlay('settings')}
+            onVacationRequest={() => setConfirmVacation(true)}
+          />
+        </Screen>
       )}
 
       <AnimatePresence>

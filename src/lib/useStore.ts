@@ -1,13 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import type { AppState, Excuse } from './types'
+import type { AppState } from './types'
 import { loadState, saveState } from './storage'
-import { todayStr, isWeekend, monthKey, currentMonthKey } from './date'
-
-let uid = 0
-function makeId(): string {
-  uid += 1
-  return `${Date.now()}-${uid}`
-}
+import { todayStr, monthKey, currentMonthKey, parseDate } from './date'
 
 export function useStore() {
   const [state, setState] = useState<AppState>(() => loadState())
@@ -22,14 +16,9 @@ export function useStore() {
     setState((prev) => {
       const today = todayStr()
       if (prev.currentDay === today) return prev
-      // New day: clear checks, point currentDay at today, reset welcome flag.
+      // New day: clear checks and point currentDay at today.
       // History and stats are preserved untouched.
-      return {
-        ...prev,
-        currentDay: today,
-        checks: {},
-        welcomeSeen: '',
-      }
+      return { ...prev, currentDay: today, checks: {} }
     })
   }, [])
 
@@ -48,8 +37,9 @@ export function useStore() {
   }, [syncDay])
 
   const todayRoutine = useMemo(() => {
-    return isWeekend(state.currentDay) ? state.weekendRoutine : state.weekRoutine
-  }, [state.currentDay, state.weekRoutine, state.weekendRoutine])
+    const weekday = parseDate(state.currentDay).getDay()
+    return state.routines[weekday] ?? []
+  }, [state.currentDay, state.routines])
 
   const doneCount = useMemo(
     () => Object.values(state.checks).filter(Boolean).length,
@@ -58,11 +48,6 @@ export function useStore() {
 
   const total = todayRoutine.length
   const progress = total === 0 ? 0 : Math.round((doneCount / total) * 100)
-
-  const monthExcuses = useMemo(
-    () => state.excuses.filter((e) => e.month === currentMonthKey()),
-    [state.excuses],
-  )
 
   // Monthly percentage of completed days (ignoring vacation days).
   const monthStats = useMemo(() => {
@@ -77,30 +62,17 @@ export function useStore() {
 
   // --- Actions ---
 
-  const setRoutines = useCallback((week: string[], weekend: string[]) => {
-    setState((p) => ({
-      ...p,
-      weekRoutine: week,
-      weekendRoutine: weekend,
-      onboarded: true,
-    }))
+  const setRoutines = useCallback((routines: string[][]) => {
+    setState((p) => ({ ...p, routines, onboarded: true }))
   }, [])
 
-  const updateRoutine = useCallback(
-    (which: 'week' | 'weekend', tasks: string[]) => {
-      setState((p) => ({
-        ...p,
-        ...(which === 'week'
-          ? { weekRoutine: tasks }
-          : { weekendRoutine: tasks }),
-        // If we replaced the routine that's active today, clear its checks.
-        ...(which === (isWeekend(p.currentDay) ? 'weekend' : 'week')
-          ? { checks: {} }
-          : {}),
-      }))
-    },
-    [],
-  )
+  const updateRoutine = useCallback((weekday: number, tasks: string[]) => {
+    setState((p) => {
+      const routines = p.routines.map((r, i) => (i === weekday ? tasks : r))
+      const isToday = parseDate(p.currentDay).getDay() === weekday
+      return { ...p, routines, ...(isToday ? { checks: {} } : {}) }
+    })
+  }, [])
 
   const toggleTask = useCallback((index: number) => {
     setState((p) => ({
@@ -109,20 +81,11 @@ export function useStore() {
     }))
   }, [])
 
-  const dismissWelcome = useCallback(() => {
-    setState((p) => ({ ...p, welcomeSeen: todayStr() }))
-  }, [])
-
   const recordDay = useCallback(
     (completed: boolean, done: number, totalTasks: number) => {
       setState((p) => {
         const today = p.currentDay
-        const record = {
-          date: today,
-          completed,
-          done,
-          total: totalTasks,
-        }
+        const record = { date: today, completed, done, total: totalTasks }
         const newStreak = completed ? p.streak + 1 : 0
         return {
           ...p,
@@ -135,23 +98,9 @@ export function useStore() {
     [],
   )
 
-  const saveExcuse = useCallback((text: string) => {
-    setState((p) => {
-      const today = p.currentDay
-      const excuse: Excuse = {
-        id: makeId(),
-        date: today,
-        month: monthKey(today),
-        text: text.trim(),
-      }
-      return { ...p, excuses: [...p.excuses, excuse] }
-    })
-  }, [])
-
   const setVacation = useCallback((on: boolean) => {
     setState((p) => {
       if (on) {
-        // Mark today as a vacation day so the calendar shows the umbrella.
         const today = p.currentDay
         return {
           ...p,
@@ -178,15 +127,12 @@ export function useStore() {
     doneCount,
     total,
     progress,
-    monthExcuses,
     monthStats,
     // actions
     setRoutines,
     updateRoutine,
     toggleTask,
-    dismissWelcome,
     recordDay,
-    saveExcuse,
     setVacation,
   }
 }

@@ -74,33 +74,29 @@ export function DayClosed({ completed, streak }: Props) {
     )
   }
 
-  // Incomplete day — black screen, violet YOU VS YOU.
+  // Incomplete day — simple, calm message.
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="flex min-h-full flex-col items-center justify-center bg-black px-8 text-center safe-top safe-bottom"
+      className="flex min-h-full flex-col items-center justify-center bg-white px-8 text-center transition-colors dark:bg-black safe-top safe-bottom"
     >
       <motion.h1
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.6 }}
-        className="text-[46px] font-bold leading-[0.95] tracking-tight text-violet"
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="text-[30px] font-semibold leading-tight text-black dark:text-white"
       >
-        YOU
-        <br />
-        VS
-        <br />
-        YOU
+        Día no completado
       </motion.h1>
 
       <motion.p
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.6 }}
-        className="mt-8 text-[14px] text-white/40"
+        transition={{ delay: 0.4 }}
+        className="mt-4 text-[14px] text-black/40 dark:text-white/40"
       >
-        Mañana es otra oportunidad
+        Quedó registrado en el calendario
       </motion.p>
     </motion.div>
   )

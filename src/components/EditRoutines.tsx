@@ -1,34 +1,37 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { parseRoutineText } from '../lib/defaults'
+import { parseRoutineText, WEEKDAY_ORDER } from '../lib/defaults'
 import { CloseIcon } from './Icons'
 import { Toggle } from './Toggle'
 import type { Theme } from '../lib/theme'
 
 interface Props {
-  week: string[]
-  weekend: string[]
+  routines: string[][]
   theme: Theme
   onToggleTheme: () => void
-  onSave: (which: 'week' | 'weekend', tasks: string[]) => void
+  onSave: (weekday: number, tasks: string[]) => void
   onClose: () => void
 }
 
 export function EditRoutines({
-  week,
-  weekend,
+  routines,
   theme,
   onToggleTheme,
   onSave,
   onClose,
 }: Props) {
-  const [tab, setTab] = useState<'week' | 'weekend'>('week')
-  const [weekText, setWeekText] = useState(week.join('\n'))
-  const [weekendText, setWeekendText] = useState(weekend.join('\n'))
+  const [dayIndex, setDayIndex] = useState(WEEKDAY_ORDER[0].index)
+  // Local editable text per weekday; seeded from the saved routines.
+  const [texts, setTexts] = useState<string[]>(() =>
+    routines.map((r) => r.join('\n')),
+  )
 
-  const text = tab === 'week' ? weekText : weekendText
-  const setText = tab === 'week' ? setWeekText : setWeekendText
+  const text = texts[dayIndex]
   const tasks = parseRoutineText(text)
+
+  function setText(value: string) {
+    setTexts((prev) => prev.map((t, i) => (i === dayIndex ? value : t)))
+  }
 
   return (
     <motion.div
@@ -64,18 +67,21 @@ export function EditRoutines({
         Editar rutinas
       </p>
 
-      <div className="mt-4 flex gap-2 rounded-full bg-violet-soft p-1">
-        {(['week', 'weekend'] as const).map((t) => (
+      {/* Weekday selector */}
+      <div className="no-scrollbar mt-4 flex gap-2 overflow-x-auto pb-1">
+        {WEEKDAY_ORDER.map((d) => (
           <button
-            key={t}
+            key={d.index}
             type="button"
-            onClick={() => setTab(t)}
+            onClick={() => setDayIndex(d.index)}
             className={
-              'flex-1 rounded-full py-2.5 text-[14px] font-medium transition-colors ' +
-              (tab === t ? 'bg-violet text-white' : 'text-violet dark:text-violet')
+              'flex-shrink-0 rounded-full px-4 py-2 text-[14px] font-medium transition-colors ' +
+              (dayIndex === d.index
+                ? 'bg-violet text-white'
+                : 'bg-violet-soft text-violet')
             }
           >
-            {t === 'week' ? 'Semana' : 'Fin de semana'}
+            {d.short}
           </button>
         ))}
       </div>
@@ -88,7 +94,7 @@ export function EditRoutines({
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
-        className="mt-4 min-h-[280px] flex-1 resize-none rounded-4xl border-2 border-violet/20 bg-white p-5 text-[15px] leading-relaxed text-black outline-none transition-colors focus:border-violet dark:bg-white/[0.04] dark:text-white"
+        className="mt-4 min-h-[240px] flex-1 resize-none rounded-4xl border-2 border-violet/20 bg-white p-5 text-[15px] leading-relaxed text-black outline-none transition-colors focus:border-violet dark:bg-white/[0.04] dark:text-white"
       />
 
       <div className="mt-3 px-1 text-right text-[13px] text-black/40 dark:text-white/40">
@@ -99,7 +105,7 @@ export function EditRoutines({
         type="button"
         disabled={tasks.length === 0}
         onClick={() => {
-          onSave(tab, tasks)
+          onSave(dayIndex, tasks)
           onClose()
         }}
         className="mt-3 w-full rounded-full bg-violet py-4 text-[16px] font-semibold text-white transition-opacity disabled:opacity-30"

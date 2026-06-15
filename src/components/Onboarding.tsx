@@ -1,37 +1,42 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { parseRoutineText, DEFAULT_WEEK, DEFAULT_WEEKEND } from '../lib/defaults'
+import { parseRoutineText, DEFAULT_BY_DAY, WEEKDAY_ORDER } from '../lib/defaults'
 
 interface Props {
-  onDone: (week: string[], weekend: string[]) => void
+  onDone: (routines: string[][]) => void
 }
 
 function RoutineStep({
-  title,
-  subtitle,
+  label,
+  position,
   placeholder,
   defaultFill,
-  cta,
+  isLast,
+  initial,
   onSubmit,
 }: {
-  title: string
-  subtitle: string
+  label: string
+  position: string
   placeholder: string
   defaultFill: string[]
-  cta: string
+  isLast: boolean
+  initial: string
   onSubmit: (tasks: string[]) => void
 }) {
-  const [text, setText] = useState('')
+  const [text, setText] = useState(initial)
   const tasks = parseRoutineText(text)
 
   return (
     <div className="flex min-h-full flex-col px-6 safe-top safe-bottom">
       <div className="pt-6">
-        <h1 className="text-[28px] font-semibold leading-tight text-black dark:text-white">
-          {title}
+        <p className="text-[13px] font-medium uppercase tracking-widest text-violet">
+          {position}
+        </p>
+        <h1 className="mt-2 text-[28px] font-semibold leading-tight text-black dark:text-white">
+          Rutina de {label}
         </h1>
         <p className="mt-2 text-[15px] text-black/50 dark:text-white/45">
-          {subtitle}
+          Pegá tu rutina para el {label}. Cada línea es una tarea.
         </p>
       </div>
 
@@ -39,7 +44,7 @@ function RoutineStep({
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder={placeholder}
-        className="mt-6 min-h-[260px] flex-1 resize-none rounded-4xl border-2 border-violet/20 bg-white p-5 text-[15px] leading-relaxed text-black outline-none transition-colors placeholder:text-black/30 focus:border-violet dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/25"
+        className="mt-6 min-h-[240px] flex-1 resize-none rounded-4xl border-2 border-violet/20 bg-white p-5 text-[15px] leading-relaxed text-black outline-none transition-colors placeholder:text-black/30 focus:border-violet dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/25"
       />
 
       <div className="mt-3 flex items-center justify-between px-1">
@@ -61,59 +66,48 @@ function RoutineStep({
         onClick={() => onSubmit(tasks)}
         className="mt-4 w-full rounded-full bg-violet py-4 text-[16px] font-semibold text-white transition-opacity disabled:opacity-30"
       >
-        {cta}
+        {isLast ? 'Empezar' : 'Continuar'}
       </button>
     </div>
   )
 }
 
 export function Onboarding({ onDone }: Props) {
-  const [step, setStep] = useState<0 | 1>(0)
-  const [week, setWeek] = useState<string[]>([])
+  const [step, setStep] = useState(0)
+  // routines indexed by JS getDay(); filled as the user advances.
+  const [routines, setRoutines] = useState<string[][]>([[], [], [], [], [], [], []])
+
+  const day = WEEKDAY_ORDER[step]
 
   return (
     <div className="min-h-full bg-white transition-colors dark:bg-black">
       <AnimatePresence mode="wait">
-        {step === 0 ? (
-          <motion.div
-            key="week"
-            initial={{ opacity: 0, x: 24 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -24 }}
-            transition={{ duration: 0.3 }}
-            className="min-h-full"
-          >
-            <RoutineStep
-              title="Tu rutina de semana"
-              subtitle="Pegá tu rutina de lunes a viernes. Cada línea es una tarea."
-              placeholder={'Levantarse\nDesayunar\nGimnasio\nEstudiar'}
-              defaultFill={DEFAULT_WEEK}
-              cta="Continuar"
-              onSubmit={(tasks) => {
-                setWeek(tasks)
-                setStep(1)
-              }}
-            />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="weekend"
-            initial={{ opacity: 0, x: 24 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -24 }}
-            transition={{ duration: 0.3 }}
-            className="min-h-full"
-          >
-            <RoutineStep
-              title="Tu rutina de fin de semana"
-              subtitle="Pegá tu rutina de sábado y domingo."
-              placeholder={'Dormir hasta tarde\nDesayuno\nProyectos'}
-              defaultFill={DEFAULT_WEEKEND}
-              cta="Empezar"
-              onSubmit={(tasks) => onDone(week, tasks)}
-            />
-          </motion.div>
-        )}
+        <motion.div
+          key={step}
+          initial={{ opacity: 0, x: 24 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -24 }}
+          transition={{ duration: 0.3 }}
+          className="min-h-full"
+        >
+          <RoutineStep
+            label={day.label}
+            position={`Día ${step + 1} de 7`}
+            placeholder={'Levantarse\nDesayunar\nGimnasio\nEstudiar'}
+            defaultFill={DEFAULT_BY_DAY[day.index]}
+            isLast={step === WEEKDAY_ORDER.length - 1}
+            initial={routines[day.index].join('\n')}
+            onSubmit={(tasks) => {
+              const next = routines.map((r, i) => (i === day.index ? tasks : r))
+              setRoutines(next)
+              if (step === WEEKDAY_ORDER.length - 1) {
+                onDone(next)
+              } else {
+                setStep(step + 1)
+              }
+            }}
+          />
+        </motion.div>
       </AnimatePresence>
     </div>
   )
